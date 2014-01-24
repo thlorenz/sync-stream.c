@@ -28,7 +28,10 @@ $(LIBSTREAM): $(LIBEE) $(OBJS)
 	$(AR) rcs $@ $(OBJS)
 
 run: all transform-sync
+	@echo "\n\033[1;33m>>>\033[0m"
 	./bin/transform-sync
+	@echo "\033[1;33m<<<\033[0m\n"
+	make clean
 
 transform-sync: $(LIBEE) $(OBJS)
 	@mkdir -p bin	

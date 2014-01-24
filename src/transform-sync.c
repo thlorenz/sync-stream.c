@@ -4,15 +4,30 @@
 #include <assert.h>
 #include <ee.h>
 
-typedef void* (*transform_cb)(void*);
+
+typedef struct stream_sync_rw_s stream_sync_rw_t;
+typedef struct stream_chunk_s stream_chunk_t;
+typedef void (*transform_cb)(const stream_chunk_t*, stream_chunk_t*);
+typedef void (*stream_cb) (stream_chunk_t*);
+
+enum stream_encoding {
+    UTF8
+  , BASE64
+  , HEX
+};
 
 struct stream_sync_rw_s {
   ee_t ee;
   transform_cb transform;
 };
 
-typedef struct stream_sync_rw_s stream_sync_rw_t;
-typedef ee_cb stream_cb;
+struct stream_chunk_s {
+  void* data;
+  enum stream_encoding enc;
+  int result;
+};
+
+// async would include the loop?
 
 stream_sync_rw_t* stream_sync_rw_new(transform_cb transform) {
   stream_sync_rw_t* self;
@@ -29,14 +44,26 @@ void stream_sync_rw_destroy(stream_sync_rw_t* self) {
 }
 
 void stream_sync_rw_on(stream_sync_rw_t* self, const char* name, stream_cb cb) {
-  ee_on((ee_t*)self, name, cb);
+  ee_on((ee_t*)self, name, (ee_cb)cb);
 }
 
-void stream_sync_rw_write(stream_sync_rw_t* self, void* data) {
-  void* res;
-  res = self->transform(data);
-  ee_emit((ee_t*)self, "data", res);
+void stream_sync_rw_write(stream_sync_rw_t* self, const stream_chunk_t* chunk_in) {
+  stream_chunk_t* chunk_out;
+  chunk_out = malloc(sizeof chunk_out);
+
+  self->transform(chunk_in, chunk_out);
+
+  /* destroy chunk_in */
+  return chunk_out->result
+    ? ee_emit((ee_t*)self, "error", chunk_out)
+    : ee_emit((ee_t*)self, "data", chunk_out);
 }
+
+/* TODO: stream_chunk_destroy */
+
+/*
+ * Example
+ */
 
 char *strtoupper(char *s){
   char *cp, *p;
@@ -45,13 +72,13 @@ char *strtoupper(char *s){
   return cp;
 }
 
-void *transform(void* d) {
-  char *s = (char*)d;
-  return (void*) strtoupper(s);
+void transform(const stream_chunk_t* chunk_in, stream_chunk_t* chunk_out) {
+  char *s = (char*)chunk_in->data;
+  chunk_out->data = strtoupper(s);
 }
 
-void ondata(void* d) {
-  char* s = (char*)d;
+void ondata(stream_chunk_t* chunk) {
+  char* s = (char*)chunk->data;;
   fprintf(stderr, "data: %s\n", s);
 }
 
@@ -59,7 +86,9 @@ int main(void) {
 
   stream_sync_rw_t* stream = stream_sync_rw_new(transform);
   stream_sync_rw_on(stream, "data", ondata);
-  stream_sync_rw_write(stream, "hello");
+
+  stream_chunk_t hello_chunk = { .data = "hello" };
+  stream_sync_rw_write(stream, &hello_chunk);
 
   stream_sync_rw_destroy(stream);
 
