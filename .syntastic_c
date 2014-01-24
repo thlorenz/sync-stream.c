@@ -1,2 +1,3 @@
--Ideps/list/
+-Ideps/ee.c/src/
+-Ideps/ee.c/deps/list
 -Isrc/

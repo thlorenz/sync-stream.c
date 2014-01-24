@@ -7,13 +7,15 @@ SCANBUILD ?= scan-build
 
 CFLAGS = -c -O3 -Wall -std=c99
 
-LIBEE_ROOT = deps/ee.c/build/
-LIBEE = $(LIBEE_ROOT)/libee.a
+LIBEE_ROOT = deps/ee.c/
+LIBEE = $(LIBEE_ROOT)/build/libee.a
+
+LIBLIST_ROOT = $(LIBEE_ROOT)/deps/list/
 
 LDFLAGS += -Ldeps/ee.c/build/ -lee
-SRCS = src/readable.c
+SRCS = src/transform-sync.c
 OBJS = $(SRCS:.c=.o)
-INCS = -I $(LIBEE_ROOT)/src
+INCS = -I $(LIBEE_ROOT)/src/ -I $(LIBLIST_ROOT)/
 CLIB = node_modules/.bin/clib
 
 LIBSTREAM = build/libstream.a
@@ -25,9 +27,12 @@ $(LIBSTREAM): $(LIBEE) $(OBJS)
 	@mkdir -p build
 	$(AR) rcs $@ $(OBJS)
 
-readable: $(LIBEE) $(OBJS)
-	@mkdir -p bin
-	$(CC) $(LDFLAGS) $(OBJS) -o bin/$@
+run: all transform-sync
+	./bin/transform-sync
+
+transform-sync: $(LIBEE) $(OBJS)
+	@mkdir -p bin	
+	$(CC) $(LDFLAGS) $(OBJS) -o bin/$@ 
 
 install: all
 	cp -f $(LIBSTREAM) $(PREFIX)/lib/libstream.a
