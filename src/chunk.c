@@ -3,18 +3,18 @@
 
 static void sst__chunk_free_data(void* data);
 
-sst_chunk_t *sst_chunk_new() {
+sst_chunk_t *sst_chunk_new(void* data) {
   sst_chunk_t *chunk;
 
   chunk         = malloc(sizeof *chunk);
-  chunk->data   = NULL;
+  chunk->data   = data;
   chunk->enc    = UTF8;
   chunk->result = 0;
   chunk->nofree = 0;
 
   /* by default we assume chunk data to an allocated char* */
   /* in all other cases a custom free needs to be provided */
-  chunk->free_data   = sst__chunk_free_data;
+  chunk->free_data = sst__chunk_free_data;
 
   return chunk;
 }

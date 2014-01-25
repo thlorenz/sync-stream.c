@@ -36,9 +36,10 @@ struct sst_chunk_s {
  * Initializes new chunk and returns the result.
  *
  * @see chunk struct for more initialization options
+ * @data   data to transport with the chunk
  * @return chunk
  */
-sst_chunk_t *sst_chunk_new();
+sst_chunk_t *sst_chunk_new(void* data);
 
 /**
  * frees the chunk

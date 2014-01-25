@@ -33,8 +33,7 @@ void upper_onwrite(sst_transform_t* self, sst_chunk_t* chunk) {
 
   s = (char*)chunk->data;
 
-  chunk_out       = sst_chunk_new();
-  chunk_out->data = strtoupper(s);
+  chunk_out       = sst_chunk_new(strtoupper(s));
   self->emit(self, chunk_out);
 }
 
@@ -43,12 +42,10 @@ void reverse_onwrite(sst_transform_t* self, sst_chunk_t* chunk) {
   sst_chunk_t *chunk_out;
   s = (char*)chunk->data;
 
-  chunk_out       = sst_chunk_new();
-  chunk_out->data = strreverse(s);
+  chunk_out = sst_chunk_new(strreverse(s));
   self->emit(self, chunk_out);
 
-  chunk_out       = sst_chunk_new();
-  chunk_out->data = " <|> ";
+  chunk_out = sst_chunk_new(" <|> ");
 
   /* data isn't allocated, so we need to prevent attempt to free it */
   chunk_out->free_data = NULL;
@@ -60,8 +57,7 @@ void onread(sst_chunk_t* chunk) {
 }
 
 void write(sst_transform_t* stream, char* data) {
-  sst_chunk_t* chunk = sst_chunk_new();
-  chunk->data = data;
+  sst_chunk_t* chunk = sst_chunk_new(data);
   stream->write(stream, chunk);
 }
 
