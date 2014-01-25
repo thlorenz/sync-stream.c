@@ -1,6 +1,6 @@
-# stream.c
+# sync-stream.c
 
-streams implementation in C
+synchronous streams implementation in C
 
 ## Status
 
@@ -8,7 +8,7 @@ Nix, Nada, Nichevo, Nothing --> go away!
 
 ## Installation
 
-    clib install thlorenz/stream.c
+    clib install thlorenz/sync-stream.c
 
 ## API
 

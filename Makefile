@@ -7,43 +7,36 @@ SCANBUILD ?= scan-build
 
 CFLAGS = -c -O3 -Wall -std=c99
 
-LIBEE_ROOT = deps/ee.c/
-LIBEE = $(LIBEE_ROOT)/build/libee.a
-
-LIBLIST_ROOT = $(LIBEE_ROOT)/deps/list/
-
-LDFLAGS += -Ldeps/ee.c/build/ -lee
-SRCS = src/transform-sync.c
+SRCS = src/transform.c
+INCS = 
 OBJS = $(SRCS:.c=.o)
-INCS = -I $(LIBEE_ROOT)/src/ -I $(LIBLIST_ROOT)/
-CLIB = node_modules/.bin/clib
 
-LIBSTREAM = build/libstream.a
+LIBSTS = build/libsts.a
 EXAMPLE = example
 
-all: clean $(LIBSTREAM)
+all: clean $(LIBSTS)
 
-$(LIBSTREAM): $(LIBEE) $(OBJS) 
+$(LIBSTS): $(OBJS) 
 	@mkdir -p build
 	$(AR) rcs $@ $(OBJS)
 
-run: all transform-sync
+run: all transform
 	@echo "\n\033[1;33m>>>\033[0m"
-	./bin/transform-sync
+	./bin/transform
 	@echo "\033[1;33m<<<\033[0m\n"
 	make clean
 
-transform-sync: $(LIBEE) $(OBJS)
+transform: $(OBJS)
 	@mkdir -p bin	
 	$(CC) $(LDFLAGS) $(OBJS) -o bin/$@ 
 
 install: all
-	cp -f $(LIBSTREAM) $(PREFIX)/lib/libstream.a
-	cp -f src/stream.h $(PREFIX)/include/stream.h
+	cp -f $(LIBSTS) $(PREFIX)/lib/libsts.a
+	cp -f src/sts.h $(PREFIX)/include/sts.h
 
 uninstall:
-	rm -f $(PREFIX)/lib/libstream.a
-	rm -f $(PREFIX)/include/stream.h
+	rm -f $(PREFIX)/lib/libsts.a
+	rm -f $(PREFIX)/include/sts.h
 
 check:
 	$(SCANBUILD) $(MAKE) test
@@ -58,25 +51,16 @@ $(EXAMPLE): clean $(EE) $(OBJS) example.o
 	$(CC) $(OBJS) example.o -o bin/$@
 	bin/$@
 
-# clibs
-$(CLIB):
-	npm install
-
-$(LIBEE): $(CLIB)
-	$(CLIB) install thlorenz/ee.c -o deps/
-	cd deps/ee.c && mkdir -p src && mv ee.* ./src && $(MAKE) build/libee.a
-
 .SUFFIXES: .c .o
 .c.o: 
 	$(CC) $< $(CFLAGS) $(INCS) -c -o $@
 
 clean-all: clean
-	rm -f $(OBJS)
 	rm -rf deps/**/build
 
 clean:
 	find . -name "*.gc*" -exec rm {} \;
 	rm -rf `find . -name "*.dSYM" -print`
-	rm -rf bin src/*.o *.o
+	rm -rf bin $(OBJS)
 
 .PHONY: all check test clean clean-all install uninstall
