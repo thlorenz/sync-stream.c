@@ -1,65 +1,96 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
-#include <ee.h>
 
+typedef struct st_sync_transform_s st_sync_transform_t;
+typedef struct st_chunk_s st_chunk_t;
+typedef void (*st_chunk_data_free_cb)(void*);
 
-typedef struct stream_sync_rw_s stream_sync_rw_t;
-typedef struct stream_chunk_s stream_chunk_t;
-typedef void (*transform_cb)(const stream_chunk_t*, stream_chunk_t*);
-typedef void (*stream_cb) (stream_chunk_t*);
+typedef void ( *st_sync_emit_cb)  ( st_sync_transform_t*, st_chunk_t*);
+typedef void ( *st_sync_read_cb)  ( st_chunk_t*);
+typedef void ( *st_sync_write_cb) ( st_sync_transform_t*, st_chunk_t*);
 
-enum stream_encoding {
-    UTF8
-  , BASE64
-  , HEX
+enum st_encoding {
+    UTF8   = 0x0
+  , BASE64 = 0x2
+  , HEX    = 0x4
+  , CUSTOM = 0x128
 };
 
-struct stream_sync_rw_s {
-  ee_t ee;
-  transform_cb transform;
+struct st_sync_transform_s {
+  st_sync_write_cb      write;
+  st_sync_read_cb       read;
+  st_sync_transform_t   *pipe;
+
+  /* readonly */
+  st_sync_emit_cb       emit;
+
+  /* private */
 };
 
-struct stream_chunk_s {
-  void* data;
-  enum stream_encoding enc;
-  int result;
+struct st_chunk_s {
+  void                    *data;
+  enum st_encoding        enc;
+  int                     result;
+  st_chunk_data_free_cb   free;
+  short                   pass_thru;
 };
 
-// async would include the loop?
+static void st__chunk_data_free(void* data) {
+  free((char*)data);
+}
 
-stream_sync_rw_t* stream_sync_rw_new(transform_cb transform) {
-  stream_sync_rw_t* self;
-  ee_t* ee;
-  ee = ee_new();
-  self = (stream_sync_rw_t*) realloc(ee, sizeof self);
-  self->transform = transform;
+st_chunk_t *st_chunk_new() {
+  st_chunk_t *chunk;
+
+  chunk            = malloc(sizeof *chunk);
+  chunk->data      = NULL;
+  chunk->enc       = UTF8;
+  chunk->result    = 0;
+  chunk->pass_thru = 0;
+
+  /* by default we assume chunk data to an allocated char* */
+  /* in all other cases a custom free needs to be provided */
+  /* in order to prevent freeing the data (i.e. when it wasn't allocated) set chunk->free = NULL */
+  chunk->free   = st__chunk_data_free;
+
+  return chunk;
+}
+
+void st_chunk_destroy(st_chunk_t* chunk) {
+  if (chunk->free) chunk->free(chunk->data);
+  free(chunk);
+}
+
+void st__sync_emit_n_pipe(st_sync_transform_t* self, st_chunk_t* chunk) {
+  if (self->read) self->read(chunk);
+  if (self->pipe) self->pipe->write(self->pipe, chunk);
+  if (chunk->pass_thru) {
+    /* don't destroy now, but unmark */
+    chunk->pass_thru = 0;
+  } else {
+    st_chunk_destroy(chunk);
+  }
+}
+
+void st__sync_pass_thru(st_sync_transform_t* self, st_chunk_t* chunk) {
+  chunk->pass_thru = 1;
+  self->emit(self, chunk);
+}
+
+st_sync_transform_t* st_sync_transform_new() {
+  st_sync_transform_t* self;
+
+  self        = malloc(sizeof *self);
+  self->write = st__sync_pass_thru;
+  self->read  = NULL;
+  self->pipe  = NULL;
+  self->emit  = st__sync_emit_n_pipe;
 
   return self;
 }
-
-void stream_sync_rw_destroy(stream_sync_rw_t* self) {
-  ee_destroy((ee_t*)self);
-}
-
-void stream_sync_rw_on(stream_sync_rw_t* self, const char* name, stream_cb cb) {
-  ee_on((ee_t*)self, name, (ee_cb)cb);
-}
-
-void stream_sync_rw_write(stream_sync_rw_t* self, const stream_chunk_t* chunk_in) {
-  stream_chunk_t* chunk_out;
-  chunk_out = malloc(sizeof chunk_out);
-
-  self->transform(chunk_in, chunk_out);
-
-  /* destroy chunk_in */
-  return chunk_out->result
-    ? ee_emit((ee_t*)self, "error", chunk_out)
-    : ee_emit((ee_t*)self, "data", chunk_out);
-}
-
-/* TODO: stream_chunk_destroy */
 
 /*
  * Example
@@ -72,25 +103,39 @@ char *strtoupper(char *s){
   return cp;
 }
 
-void transform(const stream_chunk_t* chunk_in, stream_chunk_t* chunk_out) {
-  char *s = (char*)chunk_in->data;
+void onwrite(st_sync_transform_t* self, st_chunk_t* chunk) {
+  char *s;
+  s = (char*)chunk->data;
+
+  st_chunk_t *chunk_out;
+  chunk_out = st_chunk_new();
   chunk_out->data = strtoupper(s);
+  self->emit(self, chunk_out);
+
+  chunk_out = st_chunk_new();
+  chunk_out->data = "world";
+  chunk_out->free = NULL;
+  self->emit(self, chunk_out);
 }
 
-void ondata(stream_chunk_t* chunk) {
-  char* s = (char*)chunk->data;;
-  fprintf(stderr, "data: %s\n", s);
+void onread(st_chunk_t* chunk) {
+  fprintf(stderr, "data: %s\n", chunk->data);
 }
 
 int main(void) {
+  st_sync_transform_t *tx_uno, *tx_dos;
 
-  stream_sync_rw_t* stream = stream_sync_rw_new(transform);
-  stream_sync_rw_on(stream, "data", ondata);
+  tx_uno = st_sync_transform_new();
+  tx_dos = st_sync_transform_new();
 
-  stream_chunk_t hello_chunk = { .data = "hello" };
-  stream_sync_rw_write(stream, &hello_chunk);
+  tx_uno->write = onwrite;
+  tx_uno->pipe  = tx_dos;
 
-  stream_sync_rw_destroy(stream);
+  tx_dos->read = onread;
+
+  st_chunk_t* chunk = st_chunk_new();
+  chunk->data = "hello";
+  tx_uno->write(tx_uno, chunk);
 
   return 0;
 }
