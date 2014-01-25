@@ -52,14 +52,19 @@ void reverse_onwrite(sst_transform_t* self, sst_chunk_t* chunk) {
   self->emit(self, chunk_out);
 }
 
-void onread(sst_chunk_t* chunk) {
+void write_onchunk(sst_transform_t* stream, sst_chunk_t* chunk) {
   fprintf(stderr, "%s", chunk->data);
+}
+
+void write_onend(sst_transform_t* stream) {
+  fprintf(stderr, "\nstream ended\n");
 }
 
 void write(sst_transform_t* stream, char* data) {
   sst_chunk_t* chunk = sst_chunk_new(data);
   stream->write(stream, chunk);
 }
+
 
 int main(void) {
   sst_transform_t *tx_upper, *tx_reverse, *writable;
@@ -74,12 +79,15 @@ int main(void) {
   tx_reverse->write = reverse_onwrite;
   tx_reverse->pipe = writable;
 
-  writable->read = onread;
+  writable->emit_cb = write_onchunk;
+  writable->end_cb = write_onend;
   write(tx_upper, "hello");
   write(tx_upper, "world");
   write(tx_upper, ",");
   write(tx_upper, "my");
   write(tx_upper, "friends");
+
+  tx_upper->end(tx_upper);
 
 
   sst_transform_free(tx_upper);

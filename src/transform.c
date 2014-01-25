@@ -5,15 +5,20 @@
 
 static void sst__emit_n_pipe ( sst_transform_t* self, sst_chunk_t* chunk);
 static void sst__passthru    ( sst_transform_t* self, sst_chunk_t* chunk);
+static void sst__end         ( sst_transform_t* self);
 
 sst_transform_t* sst_transform_new() {
   sst_transform_t* self;
 
-  self        = malloc(sizeof *self);
-  self->write = sst__passthru;
-  self->read  = NULL;
-  self->pipe  = NULL;
-  self->emit  = sst__emit_n_pipe;
+  self          = malloc(sizeof *self);
+  self->write   = sst__passthru;
+  self->emit_cb = NULL;
+  self->end_cb  = NULL;
+  self->pipe    = NULL;
+
+  /* readonly */
+  self->emit    = sst__emit_n_pipe;
+  self->end     = sst__end;
 
   return self;
 }
@@ -31,7 +36,7 @@ void sst_transform_free(sst_transform_t* self) {
  * @chunk   the chunk to emit
  */
 static void sst__emit_n_pipe(sst_transform_t* self, sst_chunk_t* chunk) {
-  if (self->read) self->read(chunk);
+  if (self->emit_cb) self->emit_cb(self, chunk);
   if (self->pipe) self->pipe->write(self->pipe, chunk);
 
   if (chunk->nofree) {
@@ -51,4 +56,15 @@ static void sst__emit_n_pipe(sst_transform_t* self, sst_chunk_t* chunk) {
 static void sst__passthru(sst_transform_t* self, sst_chunk_t* chunk) {
   chunk->nofree = 1;
   self->emit(self, chunk);
+}
+
+/**
+ * called when user calls stream->end
+ * invokes stream->end_cb and if piped pipe->end in order to propagate the end event
+ *
+ * @self   transform stream
+ */
+static void sst__end(sst_transform_t* self) {
+  if (self->end_cb) self->end_cb(self);
+  if (self->pipe) self->pipe->end(self->pipe);
 }

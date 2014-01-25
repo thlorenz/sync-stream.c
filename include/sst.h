@@ -55,9 +55,9 @@ void sst_chunk_free(sst_chunk_t* chunk);
 typedef struct sst_transform_s sst_transform_t;
 
 /* callbacks */
-typedef void ( *sst_emit_cb)  ( sst_transform_t*, sst_chunk_t*);
-typedef void ( *sst_read_cb)  ( sst_chunk_t*);
 typedef void ( *sst_write_cb) ( sst_transform_t*, sst_chunk_t*);
+typedef void ( *sst_emit_cb)  ( sst_transform_t*, sst_chunk_t*);
+typedef void ( *sst_end_cb)   ( sst_transform_t*);
 
 /*
  * transform struct
@@ -69,11 +69,13 @@ typedef void ( *sst_write_cb) ( sst_transform_t*, sst_chunk_t*);
  */
 struct sst_transform_s {
   sst_write_cb      write;
-  sst_read_cb       read;
+  sst_emit_cb       emit_cb;
+  sst_end_cb        end_cb;
   sst_transform_t   *pipe;
 
   /* readonly */
   sst_emit_cb       emit;
+  sst_end_cb        end;
 };
 
 /**
