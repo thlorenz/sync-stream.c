@@ -7,8 +7,8 @@ SCANBUILD ?= scan-build
 
 CFLAGS = -c -O3 -Wall -std=c99
 
-SRCS = src/transform.c
-INCS = 
+SRCS = $(wildcard src/*.c)
+INCS = -Iinclude/
 OBJS = $(SRCS:.c=.o)
 
 LIBSTS = build/libsts.a
@@ -20,15 +20,15 @@ $(LIBSTS): $(OBJS)
 	@mkdir -p build
 	$(AR) rcs $@ $(OBJS)
 
-run: all transform
+run: bin/transform-pipe
 	@echo "\n\033[1;33m>>>\033[0m"
-	./bin/transform
+	./bin/transform-pipe
 	@echo "\033[1;33m<<<\033[0m\n"
 	make clean
 
-transform: $(OBJS)
+bin/transform-pipe: $(OBJS) examples/transform-pipe.o
 	@mkdir -p bin	
-	$(CC) $(LDFLAGS) $(OBJS) -o bin/$@ 
+	$(CC) $(LDFLAGS) $(OBJS) examples/transform-pipe.o -o $@ 
 
 install: all
 	cp -f $(LIBSTS) $(PREFIX)/lib/libsts.a
@@ -46,14 +46,9 @@ test: $(EE) test.o $(OBJS)
 	$(CC) $(OBJS) test.o -o bin/$@
 	bin/$@
 
-$(EXAMPLE): clean $(EE) $(OBJS) example.o
-	@mkdir -p bin
-	$(CC) $(OBJS) example.o -o bin/$@
-	bin/$@
-
 .SUFFIXES: .c .o
 .c.o: 
-	$(CC) $< $(CFLAGS) $(INCS) -c -o $@
+	$(CC) $< $(CFLAGS) $(INCS) -o $@
 
 clean-all: clean
 	rm -rf deps/**/build
@@ -62,5 +57,6 @@ clean:
 	find . -name "*.gc*" -exec rm {} \;
 	rm -rf `find . -name "*.dSYM" -print`
 	rm -rf bin $(OBJS)
+	rm -rf examples/*.o
 
 .PHONY: all check test clean clean-all install uninstall
