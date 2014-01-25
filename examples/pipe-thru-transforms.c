@@ -27,7 +27,7 @@ char *strreverse(char *s) {
   return rs;
 }
 
-void upper_onwrite(sst_transform_t* self, sst_chunk_t* chunk) {
+void upper_onwrite(sst_t* self, sst_chunk_t* chunk) {
   char *s;
   sst_chunk_t *chunk_out;
 
@@ -37,7 +37,7 @@ void upper_onwrite(sst_transform_t* self, sst_chunk_t* chunk) {
   self->emit(self, chunk_out);
 }
 
-void reverse_onwrite(sst_transform_t* self, sst_chunk_t* chunk) {
+void reverse_onwrite(sst_t* self, sst_chunk_t* chunk) {
   char *s;
   sst_chunk_t *chunk_out;
   s = (char*)chunk->data;
@@ -52,35 +52,36 @@ void reverse_onwrite(sst_transform_t* self, sst_chunk_t* chunk) {
   self->emit(self, chunk_out);
 }
 
-void write_onchunk(sst_transform_t* stream, sst_chunk_t* chunk) {
+void writable_onchunk(sst_t* stream, sst_chunk_t* chunk) {
   fprintf(stderr, "%s", chunk->data);
 }
 
-void write_onend(sst_transform_t* stream) {
+void writable_onend(sst_t* stream) {
   fprintf(stderr, "\nstream ended\n");
+  /* this also frees all streams that are upstream from this stream */
+  sst_free(stream);
 }
 
-void write(sst_transform_t* stream, char* data) {
+void write(sst_t* stream, char* data) {
   sst_chunk_t* chunk = sst_chunk_new(data);
   stream->write(stream, chunk);
 }
 
-
 int main(void) {
-  sst_transform_t *tx_upper, *tx_reverse, *writable;
+  sst_t *tx_upper, *tx_reverse, *writable;
 
-  tx_upper = sst_transform_new();
-  tx_reverse = sst_transform_new();
-  writable = sst_transform_new();
+  tx_upper = sst_new();
+  tx_reverse = sst_new();
+  writable = sst_new();
 
   tx_upper->write = upper_onwrite;
-  tx_upper->pipe  = tx_reverse;
-
   tx_reverse->write = reverse_onwrite;
-  tx_reverse->pipe = writable;
 
-  writable->emit_cb = write_onchunk;
-  writable->end_cb = write_onend;
+  sst_pipe(tx_upper, tx_reverse);
+  sst_pipe(tx_reverse, writable);
+
+  writable->emit_cb = writable_onchunk;
+  writable->end_cb = writable_onend;
   write(tx_upper, "hello");
   write(tx_upper, "world");
   write(tx_upper, ",");
@@ -88,11 +89,6 @@ int main(void) {
   write(tx_upper, "friends");
 
   tx_upper->end(tx_upper);
-
-
-  sst_transform_free(tx_upper);
-  sst_transform_free(tx_reverse);
-  sst_transform_free(writable);
 
   return 0;
 }

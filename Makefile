@@ -20,15 +20,15 @@ $(LIBSTS): $(OBJS)
 	@mkdir -p build
 	$(AR) rcs $@ $(OBJS)
 
-run: bin/transform-pipe
+run: bin/pipe-thru-transforms.c
 	@echo "\n\033[1;33m>>>\033[0m"
-	./bin/transform-pipe
+	./bin/pipe-thru-transforms.c
 	@echo "\033[1;33m<<<\033[0m\n"
 	make clean
 
-bin/transform-pipe: $(OBJS) examples/transform-pipe.o
+bin/pipe-thru-transforms.c: $(OBJS) examples/pipe-thru-transforms.o
 	@mkdir -p bin	
-	$(CC) $(LDFLAGS) $(OBJS) examples/transform-pipe.o -o $@ 
+	$(CC) $(LDFLAGS) $(OBJS) examples/pipe-thru-transforms.o -o $@ 
 
 install: all
 	cp -f $(LIBSTS) $(PREFIX)/lib/libsts.a

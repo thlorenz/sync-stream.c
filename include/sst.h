@@ -49,46 +49,64 @@ void sst_chunk_free(sst_chunk_t* chunk);
 
 
 /*
- * transform stream
+ * stream
  */
 
-typedef struct sst_transform_s sst_transform_t;
+typedef struct sst_s sst_t;
 
 /* callbacks */
-typedef void ( *sst_write_cb) ( sst_transform_t*, sst_chunk_t*);
-typedef void ( *sst_emit_cb)  ( sst_transform_t*, sst_chunk_t*);
-typedef void ( *sst_end_cb)   ( sst_transform_t*);
+typedef void ( *sst_write_cb) ( sst_t*, sst_chunk_t*);
+typedef void ( *sst_emit_cb)  ( sst_t*, sst_chunk_t*);
+typedef void ( *sst_end_cb)   ( sst_t*);
 
 /*
- * transform struct
+ * stream struct
  *
- * @write     call this with a @see chunk in order to feed data into the transform
- * @read      if provided, it is called with every chunk emitted by the transform
- * @pipe      if set all emitted chunk will be written to that transform
- * @emit      call this to emit a chunk
+ * @write         call this with a @see chunk in order to feed data into the stream
+ * @read          if provided, it is called with every chunk emitted by the stream
+ * @emit          call this to emit a chunk
  */
-struct sst_transform_s {
+struct sst_s {
   sst_write_cb      write;
   sst_emit_cb       emit_cb;
   sst_end_cb        end_cb;
-  sst_transform_t   *pipe;
 
   /* readonly */
   sst_emit_cb       emit;
   sst_end_cb        end;
+
+  /* private */
+
+  /* the stream upstream from this stream and thus the source of all data */
+  /* we track it here only to be able to free it later */
+  sst_t   *_source;
+
+  /* the stream downstream from this stream, if set all emitted chunk will be written it */
+  sst_t   *_destination;
 };
 
 /**
- * Initializes a transform and returns it
- * @see transform struct for more initializiation options
+ * Initializes a  stream and returns it
+ * @see stream struct for more initializiation options
  *
- * @return transform stream
+ * @return stream
  */
-sst_transform_t* sst_transform_new();
+sst_t* sst_new();
 
 /**
- * Frees the given transform (at this point just free(self))
+ * Frees the given stream and walks up the `_source`s to free all streams that are upstream as well
  *
- * @self    the transform to free
+ * @self    the stream to free
  */
-void sst_transform_free(sst_transform_t* self);
+void sst_free(sst_t* self);
+
+/**
+ * Pipes the source stream into the destination stream.
+ * All chunks emitted by the source are now written to the destination.
+ * When source ends, destination is ended as well.
+ * When destination is freed the source is freed as well.
+ *
+ * @source        the upstream source
+ * @destination   the downstream destination
+ */
+void sst_pipe(sst_t* source, sst_t* destination);
