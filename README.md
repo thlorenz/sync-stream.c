@@ -111,8 +111,10 @@ typedef void ( *sst_end_cb)   ( sst_t*);
  * stream struct
  *
  * @write         call this with a @see chunk in order to feed data into the stream
- * @read          if provided, it is called with every chunk emitted by the stream
+ * @emit_cb       if provided, it is called with every chunk emitted by the stream
+ * @end_cb        if provided, it is called when the stream ends 
  * @emit          call this to emit a chunk
+ * @end           call this to signal that no more data will be written to the stream
  */
 struct sst_s {
   sst_write_cb      write;
@@ -122,15 +124,6 @@ struct sst_s {
   /* readonly */
   sst_emit_cb       emit;
   sst_end_cb        end;
-
-  /* private */
-
-  /* the stream upstream from this stream and thus the source of all data */
-  /* we track it here only to be able to free it later */
-  sst_t   *_source;
-
-  /* the stream downstream from this stream, if set all emitted chunk will be written it */
-  sst_t   *_destination;
 };
 
 /**
