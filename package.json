@@ -1,12 +1,12 @@
 {
   "name": "stream.c",
   "version": "0.0.0",
-  "description": "nodejs streams implementation in C",
+  "description": "synchronous stream implementation in C",
   "repository": {
     "type": "git",
-    "url": "git://github.com/thlorenz/stream.c.git"
+    "url": "git://github.com/thlorenz/sync-stream.c.git"
   },
-  "homepage": "https://github.com/thlorenz/stream.c",
+  "homepage": "https://github.com/thlorenz/sync-stream.c",
   "keywords": [],
   "author": {
     "name": "Thorsten Lorenz",
@@ -15,9 +15,6 @@
   },
   "license": {
     "type": "MIT",
-    "url": "https://github.com/thlorenz/stream.c/blob/master/LICENSE"
-  },
-  "dependencies": {
-    "clib": "~0.2.0"
+    "url": "https://github.com/thlorenz/sync-stream.c/blob/master/LICENSE"
   }
 }

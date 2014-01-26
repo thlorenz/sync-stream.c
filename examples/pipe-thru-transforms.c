@@ -33,7 +33,7 @@ void upper_onwrite(sst_t* self, sst_chunk_t* chunk) {
 
   s = (char*)chunk->data;
 
-  chunk_out       = sst_chunk_new(strtoupper(s));
+  chunk_out = sst_chunk_new(strtoupper(s));
   self->emit(self, chunk_out);
 }
 
