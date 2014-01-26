@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdarg.h>
 
 enum sst_encoding {
     UTF8   = 0x0
@@ -113,10 +114,11 @@ void sst_free(sst_t* self);
  * When destination is freed the source is freed as well.
  *
  * @source        the upstream source
- * @destination   the downstream destination
+ * @...           the downstream destination(s) which get chained together to form
+ *                one long pipe
  */
-void sst_pipe(sst_t* source, sst_t* destination);
-
+void sst__pipe(sst_t* source, ...);
+#define sst_pipe(source, ...) sst__pipe(source, __VA_ARGS__, NULL)
 
 /*
  * file stream

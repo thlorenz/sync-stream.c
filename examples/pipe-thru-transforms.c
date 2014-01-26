@@ -77,11 +77,11 @@ int main(void) {
   tx_upper->write = upper_onwrite;
   tx_reverse->write = reverse_onwrite;
 
-  sst_pipe(tx_upper, tx_reverse);
-  sst_pipe(tx_reverse, writable);
+  sst_pipe(tx_upper, tx_reverse, writable);
 
   writable->emit_cb = writable_onchunk;
   writable->end_cb = writable_onend;
+
   write(tx_upper, "hello");
   write(tx_upper, "world");
   write(tx_upper, ",");

@@ -20,9 +20,17 @@ $(LIBSTS): $(OBJS)
 	@mkdir -p build
 	$(AR) rcs $@ $(OBJS)
 
-run: bin/file-stream-transform
+run: run-file-stream
+
+run-file-stream: bin/file-stream-transform
 	@echo "\n\033[1;33m>>>\033[0m"
-	./bin/file-stream-transform
+	$<	
+	@echo "\n\033[1;33m<<<\033[0m\n"
+	make clean
+
+run-pipe-thru: bin/pipe-thru-transforms
+	@echo "\n\033[1;33m>>>\033[0m"
+	$<	
 	@echo "\n\033[1;33m<<<\033[0m\n"
 	make clean
 

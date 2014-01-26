@@ -38,8 +38,7 @@ int main(void) {
   sst_t *tx = sst_new();
   tx->write = tx_write;
 
-  sst_pipe((sst_t*)infs, tx);
-  sst_pipe(tx, (sst_t*)outfs);
+  sst_pipe((sst_t*)infs, tx, (sst_t*)outfs);
 
   sst_file_write_init(outfs);
   sst_file_read_start(infs);

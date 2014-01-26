@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <assert.h>
 
 #include "sst.h"
 
@@ -32,9 +34,28 @@ void sst_free(sst_t* self) {
   free(self);
 }
 
-void sst_pipe(sst_t* source, sst_t* destination) {
+void sst__pipe_sd(sst_t* source, sst_t* destination) {
   source->_destination = destination;
   destination->_source = source;
+}
+
+void sst__pipe(sst_t* s1, ...) {
+  va_list ap;
+  sst_t* source;
+  sst_t* destination;
+
+  va_start(ap, s1);
+  source = s1;
+  destination = va_arg(ap, sst_t*);
+  assert(source && destination && "need at least one source and one destination to pipe");
+
+  while(destination) {
+    sst__pipe_sd(source, destination);
+    source = destination;
+    destination = va_arg(ap, sst_t*);
+  }
+
+  va_end(ap);
 }
 
 /* private */
