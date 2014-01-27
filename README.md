@@ -156,17 +156,19 @@ sst_t* sst_new();
 void sst_free(sst_t* self);
 
 /**
- * Pipes the source stream into the destination stream.
- * All chunks emitted by the source are now written to the destination.
- * When source ends, destination is ended as well.
- * When destination is freed the source is freed as well.
+ * Pipes the source stream into the destination stream(s).
+ * All chunks emitted by the source are now written to the destination(s).
  *
- * @source        the upstream source
- * @...           the downstream destination(s) which get chained together to form
- *                one long pipe
+ * When source ends, destinations are ended as well.
+ *
+ * When most downstream destination is freed,
+ * all other destinations and the source are freed as well.
+ *
+ * @streams  streams starting with the upstream source followed by the
+ *           downstream destination(s) which get chained together to form one pipe
  */
-void sst__pipe(sst_t* source, ...);
-#define sst_pipe(source, ...) sst__pipe(source, __VA_ARGS__, NULL)
+void sst__pipe(sst_t** streams);
+#define sst_pipe(...); /* ... */                                                                                     \
 
 /*
  * file stream

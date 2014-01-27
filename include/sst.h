@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <assert.h>
 #include <stdarg.h>
 
 enum sst_encoding {
@@ -108,17 +109,26 @@ sst_t* sst_new();
 void sst_free(sst_t* self);
 
 /**
- * Pipes the source stream into the destination stream.
- * All chunks emitted by the source are now written to the destination.
- * When source ends, destination is ended as well.
- * When destination is freed the source is freed as well.
+ * Pipes the source stream into the destination stream(s).
+ * All chunks emitted by the source are now written to the destination(s).
  *
- * @source        the upstream source
- * @...           the downstream destination(s) which get chained together to form
- *                one long pipe
+ * When source ends, destinations are ended as well.
+ *
+ * When most downstream destination is freed,
+ * all other destinations and the source are freed as well.
+ *
+ * @streams  streams starting with the upstream source followed by the
+ *           downstream destination(s) which get chained together to form one pipe
  */
-void sst__pipe(sst_t* source, ...);
-#define sst_pipe(source, ...) sst__pipe(source, __VA_ARGS__, NULL)
+void sst__pipe(sst_t** streams);
+#define sst_pipe(...) {                                                                                    \
+  sst_t** streams = (sst_t*[]) { __VA_ARGS__, NULL };                                                      \
+  sst_t** srcp = streams;                                                                                  \
+  sst_t** dstp = srcp + 1;                                                                                 \
+  assert(*srcp && *dstp &&                                                                                 \
+         "you called sst_pipe with one stream: " #__VA_ARGS__ " but I need at least two streams to pipe"); \
+  sst__pipe(streams);                                                                                      \
+}
 
 /*
  * file stream

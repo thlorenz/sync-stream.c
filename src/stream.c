@@ -39,23 +39,10 @@ void sst__pipe_sd(sst_t* source, sst_t* destination) {
   destination->_source = source;
 }
 
-void sst__pipe(sst_t* s1, ...) {
-  va_list ap;
-  sst_t* source;
-  sst_t* destination;
-
-  va_start(ap, s1);
-  source = s1;
-  destination = va_arg(ap, sst_t*);
-  assert(source && destination && "need at least one source and one destination to pipe");
-
-  while(destination) {
-    sst__pipe_sd(source, destination);
-    source = destination;
-    destination = va_arg(ap, sst_t*);
-  }
-
-  va_end(ap);
+void sst__pipe(sst_t** streams) {
+  sst_t** sourcep = streams;
+  sst_t** destinationp = sourcep + 1;
+  while(*destinationp) sst__pipe_sd(*sourcep++, *destinationp++);
 }
 
 /* private */
