@@ -117,17 +117,13 @@ void sst_free(sst_t* self);
  * When most downstream destination is freed,
  * all other destinations and the source are freed as well.
  *
- * @streams  streams starting with the upstream source followed by the
- *           downstream destination(s) which get chained together to form one pipe
+ * @source upstream source
+ * @...    followed by the downstream destination(s) which get chained together to form one pipe
  */
 void sst__pipe(sst_t** streams);
-#define sst_pipe(...) {                                                                                    \
-  sst_t** streams = (sst_t*[]) { __VA_ARGS__, NULL };                                                      \
-  sst_t** srcp = streams;                                                                                  \
-  sst_t** dstp = srcp + 1;                                                                                 \
-  assert(*srcp && *dstp &&                                                                                 \
-         "you called sst_pipe with one stream: " #__VA_ARGS__ " but I need at least two streams to pipe"); \
-  sst__pipe(streams);                                                                                      \
+#define sst_pipe(source, ...) {                               \
+  sst_t** streams = (sst_t*[]) { source, __VA_ARGS__, NULL }; \
+  sst__pipe(streams);                                         \
 }
 
 /*

@@ -164,11 +164,11 @@ void sst_free(sst_t* self);
  * When most downstream destination is freed,
  * all other destinations and the source are freed as well.
  *
- * @streams  streams starting with the upstream source followed by the
- *           downstream destination(s) which get chained together to form one pipe
+ * @source upstream source
+ * @...    followed by the downstream destination(s) which get chained together to form one pipe
  */
 void sst__pipe(sst_t** streams);
-#define sst_pipe(...); /* ... */                                                                                     \
+#define sst_pipe(source, ...); /* ... */
 
 /*
  * file stream
