@@ -53,10 +53,12 @@ uninstall:
 check:
 	$(SCANBUILD) $(MAKE) test
 
-test: $(EE) test.o $(OBJS)
-	@mkdir -p bin
-	$(CC) $(OBJS) test.o -o bin/$@
-	bin/$@
+test: bin/test/stream 
+	bin/test/stream
+
+bin/test/stream: $(OBJS) test/stream.o
+	@mkdir -p bin/test
+	$(CC) $(LDFLAGS) $^ -o $@ 
 
 .SUFFIXES: .c .o
 .c.o: 
@@ -70,5 +72,6 @@ clean:
 	rm -rf `find . -name "*.dSYM" -print`
 	rm -rf bin $(OBJS)
 	rm -rf examples/*.o
+	rm -rf test/*.o
 
 .PHONY: all check test clean clean-all install uninstall
