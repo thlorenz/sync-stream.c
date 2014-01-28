@@ -1,4 +1,4 @@
-# sync-stream.c
+# sync-stream.c [![build status](https://secure.travis-ci.org/thlorenz/sync-stream.c.png)](http://travis-ci.org/thlorenz/sync-stream.c)
 
 synchronous stream implementation in C
 
