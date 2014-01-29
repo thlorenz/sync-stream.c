@@ -29,9 +29,8 @@ void upper_onwrite(sst_t* self, sst_chunk_t* chunk) {
 
   s = (char*)chunk->data;
 
-  chunk_out = sst_chunk_new(strtoupper(s));
-  // TODO: on data should copy string instead
-  chunk_out->free_data = NULL;
+  chunk_out = sst_chunk_new(strtoupper(s), NULL);
+   // TODO: on data should copy string instead
   self->emit(self, chunk_out);
 }
 
@@ -51,6 +50,7 @@ void setup() {
 
 void ondata(sst_t* self, sst_chunk_t* chunk) {
   emit_data[emit_count++] = chunk->data;
+  sst_chunk_free(chunk);
 }
 
 void onend(sst_t* self) {
@@ -65,10 +65,10 @@ void writable_stream() {
   writable->emit_cb = ondata;
   writable->end_cb  = onend;
 
-  writable->write(writable, sst_chunk_new("d0"));
+  writable->write(writable, sst_chunk_new("d0", NULL));
   t_ok(emit_count == 1, "after one write, one chunk was emitted");
 
-  writable->write(writable, sst_chunk_new("d1"));
+  writable->write(writable, sst_chunk_new("d1", NULL));
   t_ok(emit_count == 2, "after two writes, two chunks were emitted");
   t_equal_str(emit_data[0], "d0", "first emitted chunk is the one first emitted");
   t_equal_str(emit_data[1], "d1", "second emitted chunk is the one second emitted");
@@ -87,10 +87,10 @@ void transform_stream() {
   tx->emit_cb = ondata;
   tx->end_cb  = onend;
 
-  tx->write(tx, sst_chunk_new("d0"));
+  tx->write(tx, sst_chunk_new("d0", NULL));
   t_ok(emit_count == 1, "after one write, one chunk was emitted");
 
-  tx->write(tx, sst_chunk_new("d1"));
+  tx->write(tx, sst_chunk_new("d1", NULL));
   t_ok(emit_count == 2, "after two writes, two chunks were emitted");
 
   t_equal_str(emit_data[0], "D0", "first emitted chunk is the one first emitted");

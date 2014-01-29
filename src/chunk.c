@@ -1,20 +1,14 @@
 #include <stdlib.h>
 #include "sst.h"
 
-static void sst__chunk_free_data(void* data);
-
-sst_chunk_t *sst_chunk_new(void* data) {
+sst_chunk_t *sst_chunk_new(void* data, sst_chunk_data_free_cb free_data) {
   sst_chunk_t *chunk;
 
-  chunk         = malloc(sizeof *chunk);
-  chunk->data   = data;
-  chunk->enc    = UTF8;
-  chunk->result = 0;
-  chunk->nofree = 0;
-
-  /* by default we assume chunk data to an allocated char* */
-  /* in all other cases a custom free needs to be provided */
-  chunk->free_data = sst__chunk_free_data;
+  chunk            = malloc(sizeof *chunk);
+  chunk->data      = data;
+  chunk->enc       = UTF8;
+  chunk->free_data = free_data;
+  chunk->result    = 0;
 
   return chunk;
 }
@@ -24,11 +18,6 @@ void sst_chunk_free(sst_chunk_t* chunk) {
   free(chunk);
 }
 
-/*
- * private
- */
-
-/* default free data which assumes data to be a char* */
-static void sst__chunk_free_data(void* data) {
+void sst_free_string(void* data) {
   free((char*)data);
 }

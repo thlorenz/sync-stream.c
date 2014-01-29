@@ -30,8 +30,7 @@ void sst_file_read_start(sst_file_t* self) {
   sst_chunk_t *chunk;
 
   while(fgets(buf, self->bufsize, self->file)) {
-    chunk = sst_chunk_new(buf);
-    chunk->free_data = NULL;
+    chunk = sst_chunk_new(buf, sst_free_string);
     self->write((sst_t*)self, chunk);
   }
   self->end((sst_t*)self);

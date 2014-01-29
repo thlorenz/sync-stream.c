@@ -69,34 +69,46 @@ typedef void (*sst_chunk_data_free_cb)(void*);
  *
  * @data          the data transmitted with the chunk
  * @enc           encoding of the data
- * @free_data     (default: free((char*)data)) called to free the data
- *                if set to NULL, data won't be freed, use this if data wasn't allocated
- * @nofree        (default: 0) if set, chunk is not freed after it was emitted/piped
+ * @free_data     called to free the data if it is set to a function
  * @result        set this to a non-zero value to signal an error
+ * @ctx           set this to anything you need to track
  */
 struct sst_chunk_s {
   void                    *data;
   enum sst_encoding       enc;
   sst_chunk_data_free_cb  free_data;
-  short                   nofree;
   int                     result;
+  void*                   ctx;
 };
 
 /*
  * Initializes new chunk and returns the result.
  *
  * @see chunk struct for more initialization options
- * @data   data to transport with the chunk
+ *
+ * @data        data to transport with the chunk
+ * @free_data   is invoked when the chunk is freed in order to ensure data is freed properly
+ *              since we know best how to free the data when we create the chunk, we provide
+ *              it here
+ *              if the data doesn't need to be freed, i.e. because it isn't allocated pass NULL
  * @return chunk
  */
-sst_chunk_t *sst_chunk_new(void* data);
+sst_chunk_t *sst_chunk_new(void* data, sst_chunk_data_free_cb free_data);
 
 /**
  * frees the chunk
+ *
  * @chunk the chunk to free
  */
 void sst_chunk_free(sst_chunk_t* chunk);
 
+
+/**
+ * free_data function for char* data provided for convenience
+ *
+ * @data  data to be freed assumed to be of type (char*)
+ */
+void sst_free_string(void* data);
 
 /*
  * stream
@@ -168,7 +180,10 @@ void sst_free(sst_t* self);
  * @...    followed by the downstream destination(s) which get chained together to form one pipe
  */
 void sst__pipe(sst_t** streams);
-#define sst_pipe(source, ...); /* ... */
+#define sst_pipe(source, ...) {                               \
+  sst_t** streams = (sst_t*[]) { source, __VA_ARGS__, NULL }; \
+  sst__pipe(streams);                                         \
+}
 
 /*
  * file stream

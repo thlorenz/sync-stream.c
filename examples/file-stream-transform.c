@@ -14,10 +14,8 @@ void tx_write(sst_t* tx, sst_chunk_t* chunk) {
   len = strlen(chunk->data) - 1;    /* don't count new line */
   sprintf(slen, "%3d | ", len);
 
-  chunk_len = sst_chunk_new(slen);
-  chunk_len->free_data = NULL;      /* slen is not allocated */
-
-  chunk_out = sst_chunk_new(strdup(chunk->data));
+  chunk_len = sst_chunk_new(slen, NULL); /* slen is not allocated */
+  chunk_out = sst_chunk_new(strdup(chunk->data), sst_free_string);
 
   tx->emit(tx, chunk_len);
   tx->emit(tx, chunk_out);

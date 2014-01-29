@@ -20,7 +20,7 @@ $(LIBSTS): $(OBJS)
 	@mkdir -p build
 	$(AR) rcs $@ $(OBJS)
 
-run: run-file-stream
+run: run-pipe-thru
 
 run-file-stream: bin/file-stream-transform
 	@echo "\n\033[1;33m>>>\033[0m"
@@ -50,7 +50,7 @@ uninstall:
 	rm -f $(PREFIX)/lib/libsts.a
 	rm -f $(PREFIX)/include/sts.h
 
-check:
+check: all
 	$(SCANBUILD) $(MAKE) test
 
 test: bin/test/stream 
