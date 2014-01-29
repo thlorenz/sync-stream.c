@@ -5,6 +5,10 @@
 
 #include "sst.h"
 
+#ifndef strdup
+extern char *strdup(const char *str);
+#endif
+
 #define test(fn) \
   fputs("\n\x1b[34m# " # fn "\x1b[0m\n", stderr); \
   fn();
@@ -18,7 +22,7 @@
 
 char *strtoupper(char *s) {
   char *cp, *p;
-  p = cp = strdup(s);
+  p = cp = (char*)strdup(s);
   while((*p = toupper(*p))) p++;
   return cp;
 }
@@ -35,17 +39,18 @@ void upper_onwrite(sst_t* self, sst_chunk_t* chunk) {
 }
 
 static const int max_emit = 2;
-static char *emit_data[max_emit];
+static char **emit_data;
 static int  emit_count = 0;
 static int  end_called = 0;
 
 void setup() {
   int i;
   for (i = 0; i < max_emit; i++) {
-    emit_data[i] = '\0';
+    //free(emit_data[i]);
   }
   emit_count = 0;
   end_called = 0;
+  emit_data = malloc(1000);
 }
 
 void ondata(sst_t* self, sst_chunk_t* chunk) {
