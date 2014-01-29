@@ -52,7 +52,14 @@ uninstall:
 
 check: all
 	$(SCANBUILD) $(MAKE) test
+	
+grind: bin/test/stream
+	valgrind --tool=memcheck --leak-check=yes $^
 
+grind-report: bin/test/stream
+	G_SLICE=always-malloc G_DEBUG=gc-friendly \
+	valgrind -v --tool=memcheck --leak-check=full --num-callers=40 --log-file=valgrind.log $^
+	
 test: bin/test/stream 
 	bin/test/stream
 
@@ -74,4 +81,3 @@ clean:
 	rm -rf examples/*.o
 	rm -rf test/*.o
 
-.PHONY: all check test clean clean-all install uninstall
