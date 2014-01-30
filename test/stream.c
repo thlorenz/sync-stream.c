@@ -34,7 +34,6 @@ void upper_onwrite(sst_t* self, sst_chunk_t* chunk) {
   s = (char*)chunk->data;
 
   chunk_out = sst_chunk_new(strtoupper(s), NULL);
-   // TODO: on data should copy string instead
   self->emit(self, chunk_out);
 }
 
@@ -44,13 +43,10 @@ static int  emit_count = 0;
 static int  end_called = 0;
 
 void setup() {
-  int i;
-  for (i = 0; i < max_emit; i++) {
-    //free(emit_data[i]);
-  }
+  free(emit_data);
   emit_count = 0;
   end_called = 0;
-  emit_data = malloc(1000);
+  emit_data = malloc(sizeof(char*) * 10 * 2);
 }
 
 void ondata(sst_t* self, sst_chunk_t* chunk) {

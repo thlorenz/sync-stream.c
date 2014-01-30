@@ -24,16 +24,16 @@ typedef void (*sst_chunk_data_free_cb)(void*);
  * chunk struct
  *
  * @data          the data transmitted with the chunk
- * @enc           encoding of the data
- * @free_data     called to free the data if it is set to a function
- * @result        set this to a non-zero value to signal an error
+ * @enc           (default: UTF8) encoding of the data
+ * @free_data     (default: NULL) is invoked when the chunk is freed in order to ensure data is freed properly
+ * @error         (default: 0) set this to a non-zero value to signal an error
  * @ctx           set this to anything you need to track
  */
 struct sst_chunk_s {
   void                    *data;
   enum sst_encoding       enc;
-  sst_chunk_data_free_cb  free_data;
-  int                     result;
+  void                    (*free_data)(void*);
+  int                     error;
   void*                   ctx;
 };
 
@@ -43,13 +43,12 @@ struct sst_chunk_s {
  * @see chunk struct for more initialization options
  *
  * @data        data to transport with the chunk
- * @free_data   is invoked when the chunk is freed in order to ensure data is freed properly
- *              since we know best how to free the data when we create the chunk, we provide
- *              it here
+ * @free_data   (default: NULL) is invoked when the chunk is freed in order to ensure data is freed properly
+ *              since we know best how to free the data when we create the chunk, we provide it here
  *              if the data doesn't need to be freed, i.e. because it isn't allocated pass NULL
  * @return chunk
  */
-sst_chunk_t *sst_chunk_new(void* data, sst_chunk_data_free_cb free_data);
+sst_chunk_t *sst_chunk_new(void* data, void (*free_data)(void*));
 
 /**
  * frees the chunk
@@ -57,14 +56,6 @@ sst_chunk_t *sst_chunk_new(void* data, sst_chunk_data_free_cb free_data);
  * @chunk the chunk to free
  */
 void sst_chunk_free(sst_chunk_t* chunk);
-
-
-/**
- * free_data function for char* data provided for convenience
- *
- * @data  data to be freed assumed to be of type (char*)
- */
-void sst_free_string(void* data);
 
 /*
  * stream

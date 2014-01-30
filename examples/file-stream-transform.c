@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <assert.h>
 
 #include "sst.h"
@@ -15,7 +16,7 @@ void tx_write(sst_t* tx, sst_chunk_t* chunk) {
   sprintf(slen, "%3d | ", len);
 
   chunk_len = sst_chunk_new(slen, NULL); /* slen is not allocated */
-  chunk_out = sst_chunk_new(strdup(chunk->data), sst_free_string);
+  chunk_out = sst_chunk_new(strdup(chunk->data), free);
 
   tx->emit(tx, chunk_len);
   tx->emit(tx, chunk_out);
