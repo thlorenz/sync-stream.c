@@ -5,7 +5,7 @@ CC ?= gcc
 PREFIX ?= /usr/local
 SCANBUILD ?= scan-build
 
-CFLAGS = -c -O3 -Wall -std=c99
+CFLAGS = -c -O0 -Wall -std=c99
 
 SRCS = $(wildcard src/*.c)
 INCS = -Iinclude/
@@ -52,18 +52,31 @@ uninstall:
 
 check: all
 	$(SCANBUILD) $(MAKE) test
-	
+
+scp:
+	scp -r examples include src test Makefile udesktop:tmp/sync-stream
+
 grind: bin/test/stream
 	valgrind --tool=memcheck --leak-check=yes $^
 
 grind-report: bin/test/stream
 	G_SLICE=always-malloc G_DEBUG=gc-friendly \
 	valgrind -v --tool=memcheck --leak-check=full --num-callers=40 --log-file=valgrind.log $^
+
+grind-chunk: bin/test/grind/chunk-new-free
+	valgrind --tool=memcheck --leak-check=yes $^
+
+rgrind-chunk: scp
+	ssh udesktop 'cd tmp/sync-stream && make grind-chunk'
 	
 test: bin/test/stream 
 	bin/test/stream
 
-bin/test/stream: $(OBJS) test/stream.o
+bin/test/grind/%: $(OBJS) test/grind/%.o
+	@mkdir -p bin/test/grind
+	$(CC) $(LDFLAGS) $^ -o $@ 
+
+bin/test/%: $(OBJS) test/%.o
 	@mkdir -p bin/test
 	$(CC) $(LDFLAGS) $^ -o $@ 
 
