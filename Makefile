@@ -52,23 +52,6 @@ uninstall:
 
 check: all
 	$(SCANBUILD) $(MAKE) test
-
-scp:
-	scp -r examples include src test Makefile udesktop:tmp/sync-stream
-
-grind: bin/test/stream
-	valgrind --tool=memcheck --leak-check=yes $^
-
-grind-report: bin/test/stream
-	G_SLICE=always-malloc G_DEBUG=gc-friendly \
-	valgrind -v --tool=memcheck --leak-check=full --num-callers=40 --log-file=valgrind.log $^
-
-grind-chunk: bin/test/grind/chunk-new-free
-	valgrind --tool=memcheck --leak-check=yes $^
-
-rgrind-chunk: scp
-	ssh udesktop 'cd tmp/sync-stream && make grind-chunk'
-	
 test: bin/test/stream 
 	bin/test/stream
 
@@ -94,3 +77,4 @@ clean:
 	rm -rf examples/*.o
 	rm -rf test/*.o
 
+include valgrind.mk
