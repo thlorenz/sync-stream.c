@@ -4,11 +4,11 @@
 #include <ctype.h>
 
 #include "sst.h"
+#include "test.h"
 
-#define t_ok(pred, msg) do {                       \
-  fprintf(stderr, "  - \x1b[90m" msg "\x1b[0m\n"); \
-  assert(pred && msg);                             \
-} while(0)
+#define test(fn) \
+  fputs("\n\x1b[34m# [chunk] " # fn "\x1b[0m\n", stderr); \
+  fn();
 
 sst_chunk_t *create() {
   char* data = strdup("hello");
@@ -19,11 +19,14 @@ void destroy(sst_chunk_t* chunk) {
   sst_chunk_free(chunk);
 }
 
-int main(void) {
+void new_free() {
   sst_chunk_t *chunk = create();
   t_ok(chunk != NULL, "create chunk");
 
   destroy(chunk);
+}
 
+int main(void) {
+  test(new_free);
   return 0;
 }

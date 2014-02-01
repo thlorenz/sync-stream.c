@@ -11,8 +11,15 @@ SRCS = $(wildcard src/*.c)
 INCS = -Iinclude/
 OBJS = $(SRCS:.c=.o)
 
+TEST_SRCS = $(wildcard test/*.c)
+TESTS = $(addprefix bin/,$(TEST_SRCS:.c=))
+
 LIBSTS = build/libsts.a
 EXAMPLE = example
+
+show:
+	@echo src: $(TEST_SRCS)
+	@echo bin:  $(TESTS)
 
 all: clean $(LIBSTS)
 
@@ -53,8 +60,8 @@ uninstall:
 check: all
 	$(SCANBUILD) $(MAKE) test
 
-test: bin/test/test-stream 
-	$<
+test: $(TESTS) 
+	for file in $^; do ./$$file; done
 
 bin/test/%: $(OBJS) test/%.o
 	@mkdir -p bin/test

@@ -4,30 +4,20 @@
 #include <ctype.h>
 
 #include "sst.h"
-
-#ifndef strdup
-extern char *strdup(const char *str);
-#endif
+#include "test.h"
 
 #define test(fn) \
-  fputs("\n\x1b[34m# " # fn "\x1b[0m\n", stderr); \
+  fputs("\n\x1b[34m# [stream] " # fn "\x1b[0m\n", stderr); \
   fn();
 
-#define t_ok(pred, msg) do {                       \
-  fprintf(stderr, "  - \x1b[90m" msg "\x1b[0m\n"); \
-  assert(pred && msg);                             \
-} while(0)
-
-#define t_equal_str(s1, s2, msg) t_ok(strcmp((s1), (s2)) == 0, msg)
-
-char *strtoupper(char *s) {
+static char *strtoupper(char *s) {
   char *cp, *p;
   p = cp = (char*)strdup(s);
   while((*p = toupper(*p))) p++;
   return cp;
 }
 
-void upper_onwrite(sst_t* self, sst_chunk_t* chunk) {
+static void upper_onwrite(sst_t* self, sst_chunk_t* chunk) {
   char *s;
   sst_chunk_t *chunk_out;
 
