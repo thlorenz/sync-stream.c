@@ -5,7 +5,7 @@ CC ?= gcc
 PREFIX ?= /usr/local
 SCANBUILD ?= scan-build
 
-CFLAGS = -c -O0 -Wall -std=c99
+CFLAGS = -c -g -O0 -Wall -std=c99
 
 SRCS = $(wildcard src/*.c)
 INCS = -Iinclude/
@@ -52,8 +52,9 @@ uninstall:
 
 check: all
 	$(SCANBUILD) $(MAKE) test
-test: bin/test/stream 
-	bin/test/stream
+
+test: bin/test/test-stream 
+	$^
 
 bin/test/grind/%: $(OBJS) test/grind/%.o
 	@mkdir -p bin/test/grind

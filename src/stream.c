@@ -74,6 +74,6 @@ static void sst__passthru(sst_t* self, sst_chunk_t* chunk) {
  * @self   stream
  */
 static void sst__end(sst_t* self) {
-  if (self->end_cb) self->end_cb(self);
   if (self->_destination) self->_destination->end(self->_destination);
+  if (self->end_cb) self->end_cb(self);
 }

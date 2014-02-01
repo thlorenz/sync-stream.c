@@ -1,22 +1,25 @@
 # valgrind executed on remote linux machine
-scp:
-	scp -r examples include src test Makefile valgrind.mk udesktop:tmp/sync-stream > /dev/null
+
+VFLAGS = --track-origins=yes --tool=memcheck --leak-check=yes
+
+rsync:
+	rsync -ra -e ssh --exclude '/.git' --exclude '/bin' . udesktop:tmp/sync-stream
 
 grind: bin/test/stream
-	valgrind --tool=memcheck --leak-check=yes $^
+	valgrind $(VFLAGS) $^
 
 grind-report: bin/test/stream
 	G_SLICE=always-malloc G_DEBUG=gc-friendly \
-	valgrind -v --tool=memcheck --leak-check=full --num-callers=40 --log-file=valgrind.log $^
+	valgrind $(VFLAGS) -v --num-callers=40 --log-file=valgrind.log $^
 
 grind-chunk: bin/test/grind/chunk-new-free
-	valgrind --tool=memcheck --leak-check=yes $^
+	valgrind $(VFLAGS) $^
 
-rgrind-chunk: scp
-	ssh udesktop 'cd tmp/sync-stream && make grind-chunk'
+rgrind-chunk: rsync
+	ssh udesktop 'cd tmp/sync-stream && make clean && make grind-chunk'
 	
-grind-stream: bin/test/grind/stream-new-free
-	valgrind --tool=memcheck --leak-check=yes $^
+grind-stream: bin/test/test-stream
+	valgrind $(VFLAGS) $^
 
-rgrind-stream: scp
-	ssh udesktop 'cd tmp/sync-stream && make grind-stream'
+rgrind-stream: rsync
+	ssh udesktop 'cd tmp/sync-stream && make clean && make grind-stream'
