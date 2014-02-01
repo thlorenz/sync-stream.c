@@ -48,7 +48,7 @@ void setup() {
 }
 
 static void ondata(sst_t* self, sst_chunk_t* chunk) {
-  emitted = chunk->data;
+  emitted = strdup(chunk->data);
   emit_count++;
   sst_chunk_free(chunk);
 }
@@ -76,10 +76,12 @@ void writable_stream() {
   writable->write(writable, sst_chunk_new("d0", NULL));
   t_ok(emit_count == 1, "after one write, one chunk was emitted");
   t_equal_str(emitted, "d0", "first emitted chunk is the one first emitted");
+  free(emitted);
 
   writable->write(writable, sst_chunk_new("d1", NULL));
   t_ok(emit_count == 2, "after two writes, two chunks were emitted");
   t_equal_str(emitted, "d1", "second emitted chunk is the one second emitted");
+  free(emitted);
 
   t_ok(end_called == 0, "end is not called before stream was ended");
 
@@ -97,11 +99,13 @@ void transform_stream() {
 
   tx->write(tx, sst_chunk_new("d0", NULL));
   t_ok(emit_count == 1, "after one write, one chunk was emitted");
-  //t_equal_str(emitted, "D0", "first emitted chunk is the one first emitted");
+  t_equal_str(emitted, "D0", "first emitted chunk is the one first emitted");
+  free(emitted);
 
   tx->write(tx, sst_chunk_new("d1", NULL));
   t_ok(emit_count == 2, "after two writes, two chunks were emitted");
-  //t_equal_str(emitted, "D1", "second emitted chunk is the one second emitted");
+  t_equal_str(emitted, "D1", "second emitted chunk is the one second emitted");
+  free(emitted);
 
   tx->end(tx);
   t_ok(end_called == 1, "end is called exactly once after stream was ended");

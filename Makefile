@@ -54,11 +54,7 @@ check: all
 	$(SCANBUILD) $(MAKE) test
 
 test: bin/test/test-stream 
-	$^
-
-bin/test/grind/%: $(OBJS) test/grind/%.o
-	@mkdir -p bin/test/grind
-	$(CC) $(LDFLAGS) $^ -o $@ 
+	$<
 
 bin/test/%: $(OBJS) test/%.o
 	@mkdir -p bin/test

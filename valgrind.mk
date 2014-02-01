@@ -12,7 +12,7 @@ grind-report: bin/test/stream
 	G_SLICE=always-malloc G_DEBUG=gc-friendly \
 	valgrind $(VFLAGS) -v --num-callers=40 --log-file=valgrind.log $^
 
-grind-chunk: bin/test/grind/chunk-new-free
+grind-chunk: bin/test/chunk-new-free
 	valgrind $(VFLAGS) $^
 
 rgrind-chunk: rsync
