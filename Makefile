@@ -4,6 +4,7 @@ AR ?= ar
 CC ?= gcc
 PREFIX ?= /usr/local
 SCANBUILD ?= scan-build
+DSYMUTIL ?= dsymutil
 
 CFLAGS = -c -g -O0 -Wall -std=c99
 
@@ -63,12 +64,13 @@ check: all
 test: $(TESTS) 
 	for file in $^; do ./$$file; done
 
+
 bin/test/%: $(OBJS) test/%.o
 	@mkdir -p bin/test
 	$(CC) $(LDFLAGS) $^ -o $@ 
-
-dsym-%: test/%.test.o 
-	dsymutil bin/$(<:.o=)
+ifdef DSYMUTIL
+	$(DSYMUTIL) $@ 
+endif
 
 .SUFFIXES: .c .o
 .c.o: 
@@ -84,5 +86,7 @@ clean:
 	rm -rf bin $(OBJS)
 	rm -rf examples/*.o
 	rm -rf test/*.o
+
+.PHONY: clean
 
 include valgrind.mk
