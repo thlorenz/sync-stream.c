@@ -67,8 +67,12 @@ bin/test/%: $(OBJS) test/%.o
 	@mkdir -p bin/test
 	$(CC) $(LDFLAGS) $^ -o $@ 
 
+dsym-%: test/%.test.o 
+	dsymutil bin/$(<:.o=)
+
 .SUFFIXES: .c .o
 .c.o: 
+	mkdir -p bin/test
 	$(CC) $< $(CFLAGS) $(INCS) -o $@
 
 clean-all: clean
