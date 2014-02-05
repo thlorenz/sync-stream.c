@@ -4,7 +4,7 @@ AR ?= ar
 CC ?= gcc
 PREFIX ?= /usr/local
 SCANBUILD ?= scan-build
-DSYMUTIL ?= dsymutil
+uname = $(shell uname -s)
 
 CFLAGS = -c -g -O0 -Wall -std=c99
 
@@ -64,12 +64,11 @@ check: all
 test: $(TESTS) 
 	for file in $^; do ./$$file; done
 
-
 bin/test/%: $(OBJS) test/%.o
 	@mkdir -p bin/test
 	$(CC) $(LDFLAGS) $^ -o $@ 
-ifdef DSYMUTIL
-	$(DSYMUTIL) $@ 
+ifeq ($(uname),Darwin)
+	dsymutil $@ 
 endif
 
 .SUFFIXES: .c .o

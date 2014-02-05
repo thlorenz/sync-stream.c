@@ -165,7 +165,7 @@ void pipe_multi_transform_stream() {
 }
 
 int main(void) {
-//  test(pipe_transform_stream);
+  test(pipe_transform_stream);
   test(pipe_multi_transform_stream);
 
   return 0;

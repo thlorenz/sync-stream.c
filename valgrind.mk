@@ -7,7 +7,7 @@ rsync:
 	rsync -ra -e ssh --exclude '/.git' --exclude '/bin' . udesktop:tmp/sync-stream
 
 grind: $(TESTS) 
-	for file in $^; do echo "\n\033[00;34m+++ $$file +++\033[00m\n" && valgrind $(VFLAGS) ./$$file; done
+	for file in $^; do echo "\n\033[00;32m+++ $$file +++\033[00m\n" && valgrind $(VFLAGS) ./$$file; done
 
 rgrind: rsync
 	ssh udesktop 'cd tmp/sync-stream && make clean && make grind'
@@ -24,8 +24,8 @@ rgrind-report: rsync
 	scp udesktop:tmp/sync-stream/valgrind.log .
 	cat valgrind.log
 
-grind-stream: bin/test/test-stream
+grind-pipe-stream: bin/test/stream-pipe.test
 	valgrind $(VFLAGS) $^
 
-rgrind-stream: rsync
-	ssh udesktop 'cd tmp/sync-stream && make clean && make grind-stream'
+rgrind-pipe-stream: rsync
+	ssh udesktop 'cd tmp/sync-stream && make clean && make grind-pipe-stream'
