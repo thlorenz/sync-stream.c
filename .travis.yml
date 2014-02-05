@@ -1,4 +1,6 @@
 language: c
 compiler:
   - clang
-script: make CC=$CC test
+install:
+  - sudo apt-get -qq install valgrind
+script: GRIND=1 make CC=$CC test

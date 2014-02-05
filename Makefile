@@ -62,13 +62,16 @@ check: all
 	$(SCANBUILD) $(MAKE) test
 
 test: $(TESTS) 
-	for file in $^; do ./$$file; done
+	for file in $^; do echo "\n\033[00;32m+++ $$file +++\033[00m\n" && ./$$file; done
 
 bin/test/%: $(OBJS) test/%.o
 	@mkdir -p bin/test
 	$(CC) $(LDFLAGS) $^ -o $@ 
 ifeq ($(uname),Darwin)
 	dsymutil $@ 
+endif
+ifeq ($(GRIND),1)
+	valgrind $(VFLAGS) $@
 endif
 
 .SUFFIXES: .c .o
