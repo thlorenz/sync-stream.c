@@ -29,7 +29,6 @@ sst_t* sst_new() {
 }
 
 void sst_free(sst_t* self) {
-  if (self->_source) sst_free(self->_source);
   free(self);
 }
 
