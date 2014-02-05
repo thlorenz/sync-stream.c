@@ -52,6 +52,7 @@ static void reverse_onwrite(sst_t* self, sst_chunk_t* chunk) {
   chunk_out = sst_chunk_new(strreverse(s), free);
   self->emit(self, chunk_out);
 
+  free(s); /* not sure why this needs to be freed == chunk_out of upper_onwrite, so it should be auto freed */
   free(chunk);
 }
 
