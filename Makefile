@@ -28,7 +28,7 @@ $(LIBSTS): $(OBJS)
 	@mkdir -p build
 	$(AR) rcs $@ $(OBJS)
 
-run: run-file-stream
+run: run-pipe-thru
 
 run-file-stream: bin/file-stream-transform
 	@echo "\n\033[1;33m>>>\033[0m"

@@ -12,28 +12,28 @@ char *strtoupper(char *s) {
   return cp;
 }
 
-char *strreverse(char *s) {
-  char *rs, *sp, *rsp;
-  size_t len = strlen(s);
-  rs = malloc(sizeof (char) * len);
-  rs[len] = '\0';
+char* strreverse(char *s) {
+  char* str = strdup(s);
 
-  rsp = rs + (len - 1);
-  sp = s;
-  while(*sp) {
-    *rsp = *sp;
-    sp++; rsp--;
+  char temp;
+  size_t len = strlen(str) - 1;
+  size_t stop = len / 2;
+  size_t i,k;
+
+  for(i = 0, k = len; i <= stop; i++, k--) {
+    temp = str[k];
+    str[k] = str[i];
+    str[i] = temp;
   }
-  return rs;
+  return str;
 }
 
 void upper_onwrite(sst_t* self, sst_chunk_t* chunk) {
-  char *s;
   sst_chunk_t *chunk_out;
 
-  s = (char*)chunk->data;
+  chunk_out = sst_chunk_new(strtoupper(chunk->data), free);
+  sst_chunk_free(chunk);
 
-  chunk_out = sst_chunk_new(strtoupper(s), free);
   self->emit(self, chunk_out);
 }
 
@@ -46,9 +46,9 @@ void reverse_onwrite(sst_t* self, sst_chunk_t* chunk) {
   self->emit(self, chunk_out);
 
   chunk_out = sst_chunk_new(" <|> ", NULL); /* data isn't allocated */
-  self->emit(self, chunk_out);
-
   sst_chunk_free(chunk);
+
+  self->emit(self, chunk_out);
 }
 
 void writable_onchunk(sst_t* stream, sst_chunk_t* chunk) {
@@ -56,14 +56,23 @@ void writable_onchunk(sst_t* stream, sst_chunk_t* chunk) {
   sst_chunk_free(chunk);
 }
 
+void upper_onend(sst_t* stream) {
+  fprintf(stderr, "\nupper stream ended\n");
+  sst_free(stream);
+}
+
+void reverse_onend(sst_t* stream) {
+  fprintf(stderr, "\nreverse stream ended\n");
+  sst_free(stream);
+}
+
 void writable_onend(sst_t* stream) {
-  fprintf(stderr, "\nstream ended\n");
-  /* this also frees all streams that are upstream from this stream */
+  fprintf(stderr, "\nwritable stream ended\n");
   sst_free(stream);
 }
 
 void write(sst_t* stream, char* data) {
-  sst_chunk_t* chunk = sst_chunk_new(data, free);
+  sst_chunk_t* chunk = sst_chunk_new(data, NULL);
   stream->write(stream, chunk);
 }
 
@@ -75,7 +84,10 @@ int main(void) {
   writable = sst_new();
 
   tx_upper->write = upper_onwrite;
+  tx_upper->end_cb = upper_onend;
+
   tx_reverse->write = reverse_onwrite;
+  tx_reverse->end_cb = reverse_onend;
 
   sst_pipe(tx_upper, tx_reverse, writable);
 

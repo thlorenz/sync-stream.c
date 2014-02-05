@@ -24,8 +24,8 @@ rgrind-report: rsync
 	scp udesktop:tmp/sync-stream/valgrind.log .
 	cat valgrind.log
 
-grind-pipe-stream: bin/test/stream-pipe.test
+grind-pipe-thru: bin/pipe-thru-transforms
 	valgrind $(VFLAGS) $^
 
-rgrind-pipe-stream: rsync
-	ssh udesktop 'cd tmp/sync-stream && make clean && make grind-pipe-stream'
+rgrind-pipe-thru: rsync
+	ssh udesktop 'cd tmp/sync-stream && make clean && make grind-pipe-thru'
