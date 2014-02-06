@@ -179,8 +179,7 @@ void sst_file_free(sst_file_t* self);
  * For each read buffer a chunk is `emit`ted.
  * Note: file is assumed to be open at this point.
  *
- * When all chunks were read and the stream invokes `end`, the file is closed but not freed
- * since the stream that is at the end of the pipe chain is responsible for that.
+ * When all chunks were read the stream invokes `end`.
  *
  * @self  file stream
  */
@@ -188,15 +187,10 @@ void sst_file_read_start(sst_file_t* self);
 
 /**
  * Initializes file stream for writing.
- * Note: file is assumed to be open at this point.
+ * Note: file is assumed to be open at this point and needs to manually be closed before freeing the stream.
  *
  * All values written to the stream wrapper are `fputs`ed to the underlying file.
- *
- * When all upstream chunks were written, the file is closed
- * Additionally it is freed along with the wrapping file stream since it will be the stream
- * at the end of the pipe chain and thus is responsible for calling free.
- * Unset `free_onend` to disable this behavior.
- *
+ * After chunks were written they are freed automatically.
  * @self   the file stream
  */
 void sst_file_write_init(sst_file_t* self);

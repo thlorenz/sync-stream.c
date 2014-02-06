@@ -10,7 +10,10 @@ tx_reverse = sst_new();
 writable = sst_new();
 
 tx_upper->write = upper_onwrite;
+tx_upper->end_cb = upper_onend;
+
 tx_reverse->write = reverse_onwrite;
+tx_reverse->end_cb = reverse_onend;
 
 sst_pipe(tx_upper, tx_reverse, writable);
 
@@ -36,11 +39,6 @@ stream ended
 
 - [pipe-thru-transform](https://github.com/thlorenz/sync-stream.c/blob/master/examples/pipe-thru-transforms.c)
 - [file-stream-transform](https://github.com/thlorenz/sync-stream.c/blob/master/examples/file-stream-transform.c)
-
-## Status
-
-In heavy spiking mode, trying to figure out best API/behaviors.
-Use at your own risk.
 
 ## Installation
 
@@ -68,16 +66,16 @@ typedef void (*sst_chunk_data_free_cb)(void*);
  * chunk struct
  *
  * @data          the data transmitted with the chunk
- * @enc           encoding of the data
- * @free_data     called to free the data if it is set to a function
- * @result        set this to a non-zero value to signal an error
+ * @enc           (default: UTF8) encoding of the data
+ * @free_data     (default: NULL) is invoked when the chunk is freed in order to ensure data is freed properly
+ * @error         (default: 0) set this to a non-zero value to signal an error
  * @ctx           set this to anything you need to track
  */
 struct sst_chunk_s {
   void                    *data;
   enum sst_encoding       enc;
-  sst_chunk_data_free_cb  free_data;
-  int                     result;
+  void                    (*free_data)(void*);
+  int                     error;
   void*                   ctx;
 };
 
@@ -87,13 +85,12 @@ struct sst_chunk_s {
  * @see chunk struct for more initialization options
  *
  * @data        data to transport with the chunk
- * @free_data   is invoked when the chunk is freed in order to ensure data is freed properly
- *              since we know best how to free the data when we create the chunk, we provide
- *              it here
+ * @free_data   (default: NULL) is invoked when the chunk is freed in order to ensure data is freed properly
+ *              since we know best how to free the data when we create the chunk, we provide it here
  *              if the data doesn't need to be freed, i.e. because it isn't allocated pass NULL
  * @return chunk
  */
-sst_chunk_t *sst_chunk_new(void* data, sst_chunk_data_free_cb free_data);
+sst_chunk_t *sst_chunk_new(void* data, void (*free_data)(void*));
 
 /**
  * frees the chunk
@@ -101,14 +98,6 @@ sst_chunk_t *sst_chunk_new(void* data, sst_chunk_data_free_cb free_data);
  * @chunk the chunk to free
  */
 void sst_chunk_free(sst_chunk_t* chunk);
-
-
-/**
- * free_data function for char* data provided for convenience
- *
- * @data  data to be freed assumed to be of type (char*)
- */
-void sst_free_string(void* data);
 
 /*
  * stream
@@ -196,11 +185,14 @@ typedef struct sst_file_s  sst_file_t;
  * extends stream struct
  *
  * @file      the open file to read from or write to
+ * @free_file (default: NULL) is invoked when the file stream is freed in order to free file if needed
+ *            if the data doesn't need to be freed, i.e. because it isn't allocated pass NULL
  * @bufsize   (default: BUFSIZ) size of buffers to write
  */
 struct sst_file_s {
   SST_FIELDS
   FILE *file;
+  void (*free_file)(void*);
   size_t bufsize;
   short free_onend;
 };
@@ -208,10 +200,13 @@ struct sst_file_s {
 /**
  * Initializes a file stream from the given file.
  *
- * @file    the file to wrap in a stream
+ * @file      the file to wrap in a stream
+ * @free_file  invoked when the file stream is freed in order to ensure file is freed properly
+ *             ensure that the file is closed however
+ *             if the file doesn't need to be freed, i.e. because it isn't allocated pass NULL
  * @return  file stream wrapping the file
  */
-sst_file_t *sst_file_new(FILE *file);
+sst_file_t *sst_file_new(FILE *file, void (*free_file)(void*));
 
 /**
  * Frees the file stream including the FILE it is wrapping.
@@ -226,8 +221,7 @@ void sst_file_free(sst_file_t* self);
  * For each read buffer a chunk is `emit`ted.
  * Note: file is assumed to be open at this point.
  *
- * When all chunks were read and the stream invokes `end`, the file is closed but not freed
- * since the stream that is at the end of the pipe chain is responsible for that.
+ * When all chunks were read the stream invokes `end`.
  *
  * @self  file stream
  */
@@ -235,18 +229,15 @@ void sst_file_read_start(sst_file_t* self);
 
 /**
  * Initializes file stream for writing.
- * Note: file is assumed to be open at this point.
+ * Note: file is assumed to be open at this point and needs to manually be closed before freeing the stream.
  *
  * All values written to the stream wrapper are `fputs`ed to the underlying file.
- *
- * When all upstream chunks were written, the file is closed
- * Additionally it is freed along with the wrapping file stream since it will be the stream
- * at the end of the pipe chain and thus is responsible for calling free.
- * Unset `free_onend` to disable this behavior.
- *
+ * After chunks were written they are freed automatically.
  * @self   the file stream
  */
 void sst_file_write_init(sst_file_t* self);
+
+#endif
 ```
 
 ## License
