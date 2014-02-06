@@ -29,3 +29,9 @@ grind-pipe-thru: bin/pipe-thru-transforms
 
 rgrind-pipe-thru: rsync
 	ssh udesktop 'cd tmp/sync-stream && make clean && make grind-pipe-thru'
+
+grind-file-stream: bin/file-stream-transform
+	valgrind $(VFLAGS) $^
+
+rgrind-file-stream: rsync
+	ssh udesktop 'cd tmp/sync-stream && make clean && make grind-file-stream'
