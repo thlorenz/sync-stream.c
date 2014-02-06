@@ -85,6 +85,7 @@ clean:
 	rm -rf bin $(OBJS)
 	rm -rf examples/*.o
 	rm -rf test/*.o
+	rm -f  test/fixtures/sample.out.txt
 
 .PHONY: clean
 

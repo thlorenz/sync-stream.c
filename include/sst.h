@@ -143,11 +143,14 @@ typedef struct sst_file_s  sst_file_t;
  * extends stream struct
  *
  * @file      the open file to read from or write to
+ * @free_file (default: NULL) is invoked when the file stream is freed in order to free file if needed
+ *            if the data doesn't need to be freed, i.e. because it isn't allocated pass NULL
  * @bufsize   (default: BUFSIZ) size of buffers to write
  */
 struct sst_file_s {
   SST_FIELDS
   FILE *file;
+  void (*free_file)(void*);
   size_t bufsize;
   short free_onend;
 };
@@ -155,10 +158,13 @@ struct sst_file_s {
 /**
  * Initializes a file stream from the given file.
  *
- * @file    the file to wrap in a stream
+ * @file      the file to wrap in a stream
+ * @free_file  invoked when the file stream is freed in order to ensure file is freed properly
+ *             ensure that the file is closed however
+ *             if the file doesn't need to be freed, i.e. because it isn't allocated pass NULL
  * @return  file stream wrapping the file
  */
-sst_file_t *sst_file_new(FILE *file);
+sst_file_t *sst_file_new(FILE *file, void (*free_file)(void*));
 
 /**
  * Frees the file stream including the FILE it is wrapping.
