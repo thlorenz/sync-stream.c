@@ -1,6 +1,6 @@
 {
   "name": "stream.c",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "synchronous stream implementation in C",
   "repository": {
     "type": "git",

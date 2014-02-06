@@ -5,7 +5,6 @@
 #include "sst.h"
 
 static void sst__write_file ( sst_t* stream, sst_chunk_t* chunk);
-static void sst__end_file   ( sst_t* stream);
 
 sst_file_t *sst_file_new(FILE *file, void (*free_file)(void*)) {
   sst_file_t *self;

@@ -3,37 +3,28 @@
 synchronous stream implementation in C
 
 ```c
-sst_t *tx_upper, *tx_reverse, *writable;
+FILE *infile, *outfile;
+infile = fopen("src/stream.c", "r");
 
-tx_upper = sst_new();
-tx_reverse = sst_new();
-writable = sst_new();
+outfile = stdout;
 
-tx_upper->write = upper_onwrite;
-tx_upper->end_cb = upper_onend;
+sst_file_t *infs = sst_file_new(infile, NULL);
+infs->end_cb = oninfile_end;
 
-tx_reverse->write = reverse_onwrite;
-tx_reverse->end_cb = reverse_onend;
+sst_t *tx = sst_new();
+tx->write = tx_write;
+tx->end_cb = ontx_end;
 
-sst_pipe(tx_upper, tx_reverse, writable);
+sst_file_t *outfs = sst_file_new(outfile, NULL);
+outfs->end_cb = onoutfile_end;
 
-writable->emit_cb = writable_onchunk;
-writable->end_cb = writable_onend;
+sst_pipe((sst_t*)infs, tx, (sst_t*)outfs);
 
-write(tx_upper, "hello");
-write(tx_upper, "world");
-
-tx_upper->end(tx_upper);
+sst_file_write_init(outfs);
+sst_file_read_start(infs);
 ```
 
-[full example](https://github.com/thlorenz/sync-stream.c/blob/master/examples/pipe-thru-transforms.c)
-
-### output
-
-```
-OLLEH <|> DLROW <|>
-stream ended
-```
+[full example](https://github.com/thlorenz/sync-stream.c/blob/master/examples/file-stream-transform.c)
 
 ## Examples
 
