@@ -73,11 +73,7 @@ endif
 
 .SUFFIXES: .c .o
 .c.o: 
-	mkdir -p bin/test
 	$(CC) $< $(CFLAGS) $(INCS) -o $@
-
-clean-all: clean
-	rm -rf deps/**/build
 
 clean:
 	find . -name "*.gc*" -exec rm {} \;
@@ -86,7 +82,9 @@ clean:
 	rm -rf examples/*.o
 	rm -rf test/*.o
 	rm -f  test/fixtures/sample.out.txt
+	rm -rf deps/**/build
 
 .PHONY: clean
 
 include valgrind.mk
+include container.mk
