@@ -7,7 +7,8 @@
     "url": "git://github.com/thlorenz/sync-stream.c.git"
   },
   "homepage": "https://github.com/thlorenz/sync-stream.c",
-  "keywords": [],
+  "src": [ "src/chunk.c", "src/file-stream.c", "src/stream.c", "include/sst.h" ],
+  "keywords": [ "sync", "stream", "streaming", "flow" ],
   "author": {
     "name": "Thorsten Lorenz",
     "email": "thlorenz@gmx.de",
